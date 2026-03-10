@@ -22,9 +22,5 @@ RUN mkdir -p recibos_cache
 # Verify imports work (fail fast at build time)
 RUN python -c "from app.main import app; print('Import OK')"
 
-# Default port (Railway overrides via $PORT)
-ENV PORT=8000
-EXPOSE ${PORT}
-
-# Run with uvicorn (shell form to expand $PORT)
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+EXPOSE 8000
+CMD ["python", "-c", "import os, uvicorn; uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))"]

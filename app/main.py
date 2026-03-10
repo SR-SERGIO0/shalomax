@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -20,10 +21,19 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
+log = logging.getLogger("shalomax")
 
 settings = get_settings()
 
-logging.info("Starting Shalomax on port %s", os.environ.get("PORT", "8000 (default)"))
+log.info("PORT env = %s", os.environ.get("PORT", "NOT SET"))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info("=== Shalomax ready on port %s ===", os.environ.get("PORT", "8000"))
+    yield
+    log.info("=== Shalomax shutting down ===")
+
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -33,6 +43,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if settings.debug else None,
     redoc_url=None,
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
